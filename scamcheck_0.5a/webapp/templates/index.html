@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ScamCheck — email &amp; domain security checks</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: system-ui, sans-serif; max-width: 780px; margin: 2rem auto; padding: 0 1rem; background: #f7f7f9; color: #1a1a1a; }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    .tagline { color: #555; margin-top: 0; }
+    form { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    textarea { width: 100%; min-height: 160px; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+    input[type="text"] { width: 100%; box-sizing: border-box; padding: 0.55rem 0.7rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; }
+    label { display: block; margin: 0.75rem 0 0.25rem; font-weight: 600; }
+    button { margin-top: 1rem; padding: 0.6rem 1.2rem; font-size: 1rem; border-radius: 6px; border: none; background: #2563eb; color: #fff; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    .score-card { background: #fff; border-radius: 10px; padding: 1.25rem; border: 1px solid #ddd; margin-bottom: 1rem; }
+    .risk-high { color: #b91c1c; }
+    .risk-medium { color: #b45309; }
+    .risk-low { color: #a16207; }
+    .risk-minimal { color: #15803d; }
+    .bar-track { background: #e5e7eb; border-radius: 6px; height: 14px; overflow: hidden; margin: 0.5rem 0 1rem; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); }
+    .finding { border: 1px solid #eee; border-left-width: 6px; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: #fff; }
+    .finding.high { border-left-color: #ef4444; }
+    .finding.medium { border-left-color: #f59e0b; }
+    .finding.low { border-left-color: #eab308; }
+    .finding.info { border-left-color: #94a3b8; }
+    .finding .summary { font-weight: 600; }
+    .finding .evidence { color: #444; margin-top: 0.35rem; font-size: 0.92rem; }
+    .finding .advice { color: #1d4ed8; margin-top: 0.35rem; font-size: 0.92rem; }
+    .section-title { margin-top: 1.5rem; font-size: 1.05rem; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+    .checkbox-row label { margin: 0; font-weight: normal; }
+    footer { color: #888; font-size: 0.8rem; margin-top: 2rem; }
+    details.howto { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+    details.howto summary { cursor: pointer; font-weight: 600; color: #1d4ed8; }
+    details.howto ul { margin: 0.75rem 0 0.25rem 1.1rem; padding: 0; }
+    details.howto li { margin-bottom: 0.6rem; font-size: 0.9rem; }
+    .warning-banner { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.92rem; }
+    .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 2px solid #e5e7eb; }
+    .tab-bar a { flex: 1; text-align: center; padding: 0.75rem 0.5rem; text-decoration: none; color: #555; font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tab-bar a.active { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .tab-bar a:hover { color: #1d4ed8; }
+    .help-text { font-size: 0.85rem; color: #666; margin-top: 0.35rem; }
+  </style>
+</head>
+<body>
+  <h1>ScamCheck</h1>
+  <p class="tagline">Two rule-based, no-AI security checks. No cost per check, no data sent anywhere else, and every result traces back to a specific, inspectable rule.</p>
+
+  <div class="tab-bar">
+    <a href="#" class="tab-link {{ 'active' if active_tab == 'email' else '' }}" data-tab="email">Check an Email</a>
+    <a href="#" class="tab-link {{ 'active' if active_tab == 'domain' else '' }}" data-tab="domain">Check a Domain's Email Setup</a>
+  </div>
+
+  <!-- ============ EMAIL TAB ============ -->
+  <div id="tab-email" class="tab-panel" {{ 'hidden' if active_tab != 'email' else '' }}>
+    <p class="tagline">Paste or upload a suspicious email and get a plain-language explanation of why it may (or may not) be a scam.</p>
+
+    {% if email_error %}
+      <div class="error">{{ email_error }}</div>
+    {% endif %}
+
+    <details class="howto">
+      <summary>Getting the most accurate result: how to get the full email source</summary>
+      <p style="font-size: 0.9rem; margin-top: 0.6rem;">
+        Copying the visible text of an email (or forwarding it normally) leaves out the technical
+        headers this tool relies on for most of its checks. Get the full raw source instead:
+      </p>
+      <ul>
+        <li><strong>Gmail (web):</strong> open the email → click the ⋮ (more) menu in the top right of
+          the message → "Show original" → a new tab opens with the full source. Select all, copy, and
+          paste it below (or use "Download original" to get a .eml file to upload).</li>
+        <li><strong>Outlook (web):</strong> open the email → click the ⋯ menu → "View" → "View message
+          details" (or "View source" depending on your version) → copy the full text shown.</li>
+        <li><strong>Outlook (desktop):</strong> open the email in its own window → File → Info →
+          "Properties" → copy the text in the "Internet headers" box, then paste it above the message
+          body when you paste here (or just paste the headers box alone — link/language checks still
+          run on the body separately).</li>
+        <li><strong>Apple Mail:</strong> open the email → View menu → Message → "Raw Source" (or
+          Option+Command+U) → select all, copy, and paste below.</li>
+        <li><strong>Any client:</strong> look for "Download message," "Save as .eml," or "Export" —
+          uploading that file above always gives the most complete analysis.</li>
+      </ul>
+    </details>
+
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="tab" value="email">
+      <label for="eml_file">Upload a .eml file (exported email)</label>
+      <input type="file" id="eml_file" name="eml_file" accept=".eml">
+
+      <label for="raw_email">...or paste the raw email source (including headers)</label>
+      <textarea id="raw_email" name="raw_email" placeholder="From: ...&#10;To: ...&#10;Subject: ...&#10;&#10;message body"></textarea>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="skip_whois" name="skip_whois">
+        <label for="skip_whois">Skip domain-age lookup (faster, no network call)</label>
+      </div>
+
+      <button type="submit">Analyze email</button>
+    </form>
+
+    {% if email_report %}
+      {% if email_report.limited_headers %}
+        <div class="warning-banner">
+          <strong>Limited analysis:</strong> no Received/Authentication-Results/Return-Path headers
+          were found in what you submitted, which usually means only the visible message body was
+          provided. Authentication (SPF/DKIM/DMARC), sender-mismatch, display-name spoofing, and
+          domain checks were skipped — this score comes from link and language analysis only and
+          likely <strong>understates</strong> the real risk. See "Getting the most accurate result"
+          above for how to get the full source.
+        </div>
+      {% endif %}
+      <div class="score-card">
+        <h2>Suspicion score: {{ email_report.score }}/100</h2>
+        <div class="bar-track"><div class="bar-fill" style="width: {{ email_report.score }}%;"></div></div>
+        <p><strong>{{ email_report.risk_level }}</strong></p>
+      </div>
+
+      {% set concerning = email_report.findings | selectattr('weight', 'gt', 0) | list %}
+      {% set reassuring = email_report.findings | selectattr('weight', 'lt', 0) | list %}
+      {% set neutral = email_report.findings | rejectattr('weight', 'gt', 0) | rejectattr('weight', 'lt', 0) | list %}
+
+      {% if concerning %}
+        <h3 class="section-title">Why this was flagged</h3>
+        {% for f in concerning %}
+          <div class="finding {{ f.severity.value }}">
+            <div class="summary">{{ f.summary }}</div>
+            <div class="evidence">{{ f.evidence }}</div>
+            {% if f.advice %}<div class="advice">What to do: {{ f.advice }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if reassuring %}
+        <h3 class="section-title">Positive signals</h3>
+        {% for f in reassuring %}
+          <div class="finding info">
+            <div class="summary">{{ f.summary }}</div>
+            <div class="evidence">{{ f.evidence }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if neutral %}
+        <h3 class="section-title">Other notes</h3>
+        {% for f in neutral %}
+          <div class="finding info">
+            <div class="summary">{{ f.summary }}</div>
+            <div class="evidence">{{ f.evidence }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- ============ DOMAIN TAB ============ -->
+  <div id="tab-domain" class="tab-panel" {{ 'hidden' if active_tab != 'domain' else '' }}>
+    <p class="tagline">Enter a domain (yours, or one you're vetting) to check whether its published SPF, DKIM, DMARC, and MX records would let someone else send convincing spoofed mail as that domain. Public DNS lookups only — no login, no access to the domain's mail server needed.</p>
+
+    {% if domain_error %}
+      <div class="error">{{ domain_error }}</div>
+    {% endif %}
+
+    <form method="post">
+      <input type="hidden" name="tab" value="domain">
+      <label for="domain">Domain name</label>
+      <input type="text" id="domain" name="domain" placeholder="example.com" autocomplete="off">
+      <p class="help-text">Works on any domain, not just ones you own.</p>
+      <button type="submit">Check domain</button>
+    </form>
+
+    {% if domain_report %}
+      <div class="score-card">
+        <h2>Spoofing exposure: {{ domain_report.score }}/100</h2>
+        <div class="bar-track"><div class="bar-fill" style="width: {{ domain_report.score }}%;"></div></div>
+        <p><strong>{{ domain_report.risk_level }}</strong></p>
+      </div>
+
+      {% set concerning = domain_report.findings | selectattr('weight', 'gt', 0) | list %}
+      {% set reassuring = domain_report.findings | selectattr('weight', 'lt', 0) | list %}
+      {% set neutral = domain_report.findings | rejectattr('weight', 'gt', 0) | rejectattr('weight', 'lt', 0) | list %}
+
+      {% if concerning %}
+        <h3 class="section-title">Issues found</h3>
+        {% for f in concerning %}
+          <div class="finding {{ f.severity.value }}">
+            <div class="summary">{{ f.summary }}</div>
+            <div class="evidence">{{ f.evidence }}</div>
+            {% if f.advice %}<div class="advice">Fix: {{ f.advice }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if reassuring %}
+        <h3 class="section-title">Working correctly</h3>
+        {% for f in reassuring %}
+          <div class="finding info">
+            <div class="summary">{{ f.summary }}</div>
+            <div class="evidence">{{ f.evidence }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if neutral %}
+        <h3 class="section-title">Other notes</h3>
+        {% for f in neutral %}
+          <div class="finding info">
+            <div class="summary">{{ f.summary }}</div>
+            <div class="evidence">{{ f.evidence }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <footer>ScamCheck — built for the OUPI Cyber Clinic Contest 2026. Every result above comes from a specific, inspectable rule or public DNS record — nothing is generated by a language model.</footer>
+
+  <script>
+    // Simple client-side tab switching that also keeps the hidden "tab"
+    // form field in sync, so a submit always posts to the tab you're on.
+    document.querySelectorAll(".tab-link").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        var tab = link.getAttribute("data-tab");
+        document.querySelectorAll(".tab-link").forEach(function (l) { l.classList.remove("active"); });
+        link.classList.add("active");
+        document.getElementById("tab-email").hidden = tab !== "email";
+        document.getElementById("tab-domain").hidden = tab !== "domain";
+        document.querySelectorAll('input[name="tab"]').forEach(function (input) { input.value = tab; });
+      });
+    });
+  </script>
+</body>
+</html>

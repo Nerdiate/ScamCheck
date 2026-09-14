@@ -1,0 +1,18 @@
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
+	by mx.example.com with ESMTPS id def456 for <victim@example.com>;
+	Sat, 12 Sep 2026 14:02:05 -0000
+Message-ID: <CAexample123@mail.gmail.com>
+Authentication-Results: mx.example.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass header.d=gmail.com; dmarc=pass header.from=gmail.com
+From: "Wells Fargo Account Services" <wellsfargo.alerts247@gmail.com>
+To: victim@example.com
+Subject: Action Required: Confirm your account information
+Date: Sat, 12 Sep 2026 14:02:00 -0000
+Content-Type: text/plain; charset="UTF-8"
+Content-Disposition: multipart/mixed
+
+Dear Customer,
+
+We noticed unusual activity and need you to confirm your account details
+immediately to avoid suspension. Please see the attached form.
+
+Wells Fargo Account Services
