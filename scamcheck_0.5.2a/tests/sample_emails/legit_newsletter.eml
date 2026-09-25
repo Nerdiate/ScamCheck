@@ -1,0 +1,15 @@
+From: "Example News" <newsletter@example.com>
+To: subscriber@example.com
+Subject: Your weekly digest from Example News
+Date: Sat, 12 Sep 2026 09:00:00 -0000
+Authentication-Results: mx.example.com; spf=pass smtp.mailfrom=example.com; dkim=pass header.d=example.com; dmarc=pass header.from=example.com
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Alex,
+
+Here's what happened this week. Thanks for reading, as always.
+
+Read the full digest at https://example.com/digest/2026-09-12
+
+Best,
+The Example News Team
